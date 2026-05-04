@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'core/supabase_config.dart';
 import 'features/auth/presentation/auth_gate.dart';
 
@@ -10,6 +11,8 @@ Future<void> main() async {
     url: SupabaseConfig.url,
     anonKey: SupabaseConfig.anonKey,
   );
+
+  await initializeDateFormatting('fr_FR', null);
 
   runApp(const HabitTrackerApp());
 }
