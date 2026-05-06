@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/supabase_config.dart';
-import 'features/auth/presentation/auth_gate.dart';
+import 'core/router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,15 +15,21 @@ Future<void> main() async {
 
   await initializeDateFormatting('fr_FR', null);
 
-  runApp(const HabitTrackerApp());
+  runApp(
+    const ProviderScope(
+      child: HabitTrackerApp(),
+    ),
+  );
 }
 
-class HabitTrackerApp extends StatelessWidget {
+class HabitTrackerApp extends ConsumerWidget {
   const HabitTrackerApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+
+    return MaterialApp.router(
       title: 'Habit Tracker',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -34,7 +41,7 @@ class HabitTrackerApp extends StatelessWidget {
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
       ),
-      home: const AuthGate(),
+      routerConfig: router,
     );
   }
 }
