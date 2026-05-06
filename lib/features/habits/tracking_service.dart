@@ -37,30 +37,49 @@ class TrackingService {
     return HabitCheck.fromJson(response);
   }
 
-  Stream<List<HabitCheck>> watchChecksForToday() {
+  Stream<List<HabitCheck>> watchChecksForToday() async* {
     final today = DateUtils.todayUTC();
-    return _client
-        .from('habit_checks')
-        .stream(primaryKey: ['id'])
-        .eq('user_id', _userId)
-        .map((rows) {
-      return rows
-          .where((row) => row['checked_date'] == today)
-          .map((row) => HabitCheck.fromJson(row))
-          .toList();
-    });
+    while (true) {
+      try {
+        final stream = _client
+            .from('habit_checks')
+            .stream(primaryKey: ['id'])
+            .eq('user_id', _userId)
+            .map((rows) {
+          return rows
+              .where((row) => row['checked_date'] == today)
+              .map((row) => HabitCheck.fromJson(row))
+              .toList();
+        });
+        yield* stream;
+      } catch (e) {
+        await Future.delayed(const Duration(seconds: 2));
+      }
+    }
   }
 
-  Stream<List<HabitCheck>> watchAllChecks() {
-    return _client
-        .from('habit_checks')
-        .stream(primaryKey: ['id'])
-        .eq('user_id', _userId)
-        .order('checked_date', ascending: false)
-        .map((rows) {
-      return rows
-          .map((row) => HabitCheck.fromJson(row))
-          .toList();
-    });
+  Stream<List<HabitCheck>> watchAllChecks() async* {
+    while (true) {
+      try {
+        final stream = _client
+            .from('habit_checks')
+            .stream(primaryKey: ['id'])
+            .eq('user_id', _userId)
+            .order('checked_date', ascending: false)
+            .map((rows) {
+          final checks = rows.map((row) => HabitCheck.fromJson(row)).toList();
+          // Tri par date décroissante, puis par ID décroissant pour les checks du même jour
+          checks.sort((a, b) {
+            final dateCmp = b.checkedDate.compareTo(a.checkedDate);
+            if (dateCmp != 0) return dateCmp;
+            return b.id.compareTo(a.id); 
+          });
+          return checks;
+        });
+        yield* stream;
+      } catch (e) {
+        await Future.delayed(const Duration(seconds: 2));
+      }
+    }
   }
 }

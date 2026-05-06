@@ -13,7 +13,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/home',
     // Redirection automatique selon l'état d'authentification
     redirect: (context, state) {
-      final loggedIn = authState.value?.user != null;
+      final loggedIn = authState.value?.session?.user != null;
       final loggingIn = state.matchedLocation == '/login';
 
       if (!loggedIn && !loggingIn) return '/login';

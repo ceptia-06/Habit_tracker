@@ -14,17 +14,27 @@ class HabitService {
     return userId;
   }
 
-  Stream<List<Habit>> watchHabits() {
-    return _client
-        .from('habits')
-        .stream(primaryKey: ['id'])
-        .eq('user_id', _userId)
-        .order('created_at', ascending: false)
-        .map((rows) {
-      return rows
-          .map((row) => Habit.fromJson(row))
-          .toList();
-    });
+  Stream<List<Habit>> watchHabits() async* {
+    while (true) {
+      try {
+        final stream = _client
+            .from('habits')
+            .stream(primaryKey: ['id'])
+            .eq('user_id', _userId)
+            .order('created_at', ascending: false)
+            .map((rows) {
+          final habits = rows.map((row) => Habit.fromJson(row)).toList();
+          // Tri local supplémentaire pour garantir l'ordre
+          habits.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return habits;
+        });
+        
+        yield* stream;
+      } catch (e) {
+        // Attendre avant de réessayer en cas d'erreur de connexion
+        await Future.delayed(const Duration(seconds: 2));
+      }
+    }
   }
 
   Future<Habit> createHabit(String name) async {

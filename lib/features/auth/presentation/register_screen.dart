@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/providers.dart';
 import '../data/auth_service.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProviderStateMixin {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
-  final _authService = AuthService();
 
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -46,7 +48,10 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     try {
-      await _authService.signUp(email: _emailController.text, password: _passwordController.text);
+      await ref.read(authServiceProvider).signUp(
+        email: _emailController.text, 
+        password: _passwordController.text
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -57,7 +62,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
             margin: const EdgeInsets.all(16),
           ),
         );
-        Navigator.pop(context);
+        context.go('/login');
       }
     } on AuthException catch (e) {
       if (mounted) _showError(AuthService.friendlyError(e));
@@ -85,7 +90,6 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
     return Scaffold(
       body: Stack(
         children: [
-          // Fond dégradé statique (même ambiance que Login)
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -95,7 +99,6 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
               ),
             ),
           ),
-          // Orbe déco
           Positioned(top: -80, right: -80,
             child: Container(width: 300, height: 300,
               decoration: BoxDecoration(shape: BoxShape.circle,
@@ -115,13 +118,12 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
           SafeArea(
             child: Column(
               children: [
-                // App bar custom
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: Row(
                     children: [
                       GestureDetector(
-                        onTap: () => Navigator.pop(context),
+                        onTap: () => context.pop(),
                         child: Container(
                           width: 40, height: 40,
                           decoration: BoxDecoration(
@@ -144,7 +146,6 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                         position: _formSlide,
                         child: Column(
                           children: [
-                            // Icône
                             Container(
                               width: 70, height: 70,
                               decoration: BoxDecoration(
@@ -160,7 +161,6 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                             Text('Rejoins des milliers d\'utilisateurs ✨', style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.5))),
                             const SizedBox(height: 32),
 
-                            // Card
                             Container(
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(24),
@@ -229,7 +229,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                               children: [
                                 Text('Déjà un compte ? ', style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13)),
                                 GestureDetector(
-                                  onTap: () => Navigator.pop(context),
+                                  onTap: () => context.pop(),
                                   child: const Text('Se connecter', style: TextStyle(color: Color(0xFF667EEA), fontWeight: FontWeight.w600, fontSize: 13)),
                                 ),
                               ],

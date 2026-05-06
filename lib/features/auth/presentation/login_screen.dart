@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math' as math;
+import '../../../core/providers.dart';
 import '../data/auth_service.dart';
 import 'register_screen.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
+class _LoginScreenState extends ConsumerState<LoginScreen>
     with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _authService = AuthService();
 
   bool _isLoading = false;
   bool _obscurePassword = true;
@@ -60,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen>
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     try {
-      await _authService.signIn(
+      await ref.read(authServiceProvider).signIn(
         email: _emailController.text,
         password: _passwordController.text,
       );
@@ -164,7 +165,7 @@ class _LoginScreenState extends State<LoginScreen>
                               children: [
                                 Text('Connexion', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white.withValues(alpha: 0.95))),
                                 const SizedBox(height: 6),
-                                Text('Bon retour parmi nous 👋', style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.5))),
+                                Text('Connectez-vous pour commencer à suivre vos habitudes', style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.5))),
                                 const SizedBox(height: 24),
                                 _GlassField(controller: _emailController, label: 'Email', icon: Icons.email_outlined, keyboardType: TextInputType.emailAddress,
                                   validator: (v) {
